@@ -85,7 +85,17 @@ writeFile("tasks.json", data)
    res.redirect("/")
   })
  })
-
+// Clear all tasks
+app.post('/clear-tasks', (req, res) => {
+  // kirjutab taskidesse task asemel[], mis teeb tasks.json faili tühjaks 
+  writeFile('./tasks.json', JSON.stringify([], null, 2))
+    .then(() => {
+      res.redirect('/');
+    })
+    .catch(err => {
+      res.status(500).send('Error clearing tasks');
+    });
+});
 
 app.listen(port, () => {
   console.log(`http://localhost:${port}`)
