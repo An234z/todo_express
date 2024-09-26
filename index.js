@@ -98,6 +98,21 @@ writeFile("tasks.json", data)
    res.redirect("/")
   })
  })
+
+ app.get("/edit-task/:taskId", (req, res) => {
+  const editTaskId = parseInt(req.params.taskId);
+  readFile("./tasks.json")
+    .then(tasks => {
+      const taskToEdit = tasks.find(task => task.id === editTaskId);
+      if (taskToEdit) {
+        res.render('edit', { task: taskToEdit, error: null });
+        console.log("Task for updating>",taskToEdit)
+      } else {
+        res.redirect('/');
+      }
+    });
+});
+
 // Clear all tasks
 app.post('/clear-tasks', (req, res) => {
   // kirjutab taskidesse task asemel[], mis teeb tasks.json faili tühjaks 
@@ -109,6 +124,37 @@ app.post('/clear-tasks', (req, res) => {
       res.status(500).send('Error clearing tasks');
     });
 });
+
+app.post("/update-task/:taskId", (req, res) => {
+  const updateTaskId = parseInt(req.params.taskId);
+  const updatedTask = req.body.task.trim(); // Kasutame trim(), et eemaldada tühikud
+
+  readFile("./tasks.json")
+    .then(tasks => {
+      const taskIndex = tasks.findIndex(task => task.id === updateTaskId);
+      if (taskIndex !== -1) {
+        if (updatedTask.length > 0) { // Kontrollime, et uus tekst pole tühi
+          tasks[taskIndex].task = updatedTask;
+          const data = JSON.stringify(tasks, null, 2);
+          return writeFile("./tasks.json", data).then(() => {
+            res.redirect("/");
+          });
+        } else {
+          // Kui tühjaks jäetakse, tagasta redigeerimise leht koos veateatega
+          const error = "Please insert correct task data";
+          const taskToEdit = tasks[taskIndex];
+          res.render("edit", { task: taskToEdit, error: error });
+        }
+      } else {
+        throw new Error("Task not found.");
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      res.redirect("/");
+    });
+});
+
 
 app.listen(port, () => {
   console.log(`http://localhost:${port}`)
